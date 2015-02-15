@@ -116,5 +116,5 @@ sprintf("Mean of steps per day = %0.2f", mean(completeByDate$x))
 Observe that only the median differs (and only by a little value) when we input missing data with estimate values.
 This is just because the estimate has been chosen as the mean for the intervals (hence the mean is exactly the same in both cases).
 
-In global we can say that the impact of this operation hasa been minimal.
+In global we can say that the impact of inputing missing data has been minimal.
 ## Are there differences in activity patterns between weekdays and weekends?

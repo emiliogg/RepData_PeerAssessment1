@@ -68,6 +68,9 @@ sprintf("5-minute interval with maximum numer of steps: %d (with average of %f s
 
 ## Imputing missing values
 
+The strategy for imputing missing values will be to assume the same number of steps that the mean of number of steps for the same 5-minute interval calculated considering the valid data.
+
+
 ```r
 # First show the number of rows with NAs
 sprintf("Total numer of rows with NAs: %d", sum(is.na(df)))

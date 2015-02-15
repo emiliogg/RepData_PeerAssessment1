@@ -120,4 +120,26 @@ Observe that only the median differs (and only by a little value) when we input 
 This is just because the estimate has been chosen as the mean for the intervals (hence the mean is exactly the same in both cases).
 
 In global we can say that the impact of inputing missing data has been minimal.
+
+
 ## Are there differences in activity patterns between weekdays and weekends?
+
+```r
+Sys.setlocale("LC_TIME", "English")
+```
+
+```
+## [1] "English_United States.1252"
+```
+
+```r
+wd <- ifelse(weekdays(completeDF$date) %in% c('Saturday','Sunday'), "weekend", "weekday" )
+completeDF$weekwhat <- as.factor(wd)
+library(lattice)
+byInterval <-aggregate(completeDF$steps, by=list(interval=completeDF$interval, weekwhat=completeDF$weekwhat), FUN=mean)
+
+xyplot(byInterval$x~byInterval$interval |levels(byInterval$weekwhat), type="l", layout=c(1,2), xlab="Interval", ylab="Number of Steps")
+```
+
+![plot of chunk unnamed-chunk-5](figure/unnamed-chunk-5-1.png) 
+

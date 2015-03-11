@@ -45,11 +45,13 @@ Median of the total number of steps taken by day: ***10765.00***
 Mean of the total number of steps taken by day: ***10766.19*** 
 
 ## What is the average daily activity pattern?
-Here I compute the average of steps per interval across all dates and plot
+Here I compute the average of steps per interval across all dates and plot with a vertical line at the maximum.
 
 ```r
 byInterval <- aggregate(dvalid$steps, by=list(interval=dvalid$interval), FUN=mean)
-plot(byInterval$interval, byInterval$x, type="l", main="Mean number of steps per interval (across all days)", xlab="Interval", ylab="Mean number of steps")
+plot(byInterval$interval, byInterval$x, type="l", 
+     main="Mean number of steps per interval (across all days)", 
+     xlab="Interval", ylab="Mean number of steps", col="red")
 # Order the intervals in decreasing order and take the first one
 a         <- order(byInterval$x, decreasing=TRUE)
 topInt    <- byInterval[a[1],"interval"]
@@ -118,9 +120,7 @@ Mean of the total number of steps taken by day: ***10766.19***
 
 ### Impact of inputing missing data
 Observe that only the median differs (and only by a little value) when we input missing data with estimate values.
-This is just because the estimate has been chosen as the mean for the intervals (hence the mean is exactly the same in both cases).
-
-In global we can say that the impact of inputing missing data has been minimal.
+This is just because the estimate has been chosen as the mean for the intervals (hence the mean is exactly the same in both cases). In global we can say that the impact of inputing missing data has been minimal.
 
 
 ## Are there differences in activity patterns between weekdays and weekends?
@@ -139,7 +139,8 @@ dfww <- dvalid
 wd   <- ifelse(weekdays(dfww$date) %in% c('Saturday','Sunday'), "weekend", "weekday" )
 dfww$weekwhat <- as.factor(wd)
 byInterval <-aggregate(dfww$steps, by=list(interval=dfww$interval, weekwhat=dfww$weekwhat), FUN=mean)
-xyplot(byInterval$x ~ byInterval$interval |byInterval$weekwhat, type="l", layout=c(1,2), xlab="Interval", ylab="Number of Steps")
+xyplot(byInterval$x ~ byInterval$interval |byInterval$weekwhat, type="l", layout=c(1,2), 
+       xlab="Interval", ylab="Number of Steps")
 ```
 
 ![plot of chunk unnamed-chunk-5](figure/unnamed-chunk-5-1.png) 

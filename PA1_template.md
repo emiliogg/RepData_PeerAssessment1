@@ -1,78 +1,87 @@
 ---
 title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
+author: "Emilio Gonzalez"
+date: "March 13, 2015"
+output:     
+html_document:
+keep_md: true
 ---
 
 
 ## Loading and preprocessing the data
+The data file (present in current directory) is readed and some preprocessing is done converting date strings to R date format
 
 ```r
-# Read the data and convert dates to proper type
 df      <- read.csv("activity.csv", header=TRUE)
 df$date <- as.Date(df$date)
 ```
 ## What is mean total number of steps taken per day?
+Here NA values are omitted. The script uses the dplyr package to summarize steps by date.
+Finally the requested histogram is created using ggplot2 graphics.
+
 
 ```r
-# Omit NA values, summarize steps by date and create and histogram
 library(dplyr)
-dvalid  <- na.omit(df)
-byDate <- aggregate(dvalid$steps, by=list(date=dvalid$date), FUN=sum)
-bins    <-seq(1, max(byDate$x), length=15)
-hist(byDate$x, breaks= bins, xlab="Number of Steps", main="Histogram of steps taken per day")
+library(ggplot2)
+dvalid <- na.omit(df)
+byDay <- group_by(dvalid, date)
+byDay <- summarise(byDay, Steps=sum(steps))
+ggplot(byDay, aes(Steps))+ geom_histogram(binwidth=1000, fill="white", colour="black") +
+    ggtitle("Histogram of steps taken per day") 
 ```
 
 ![plot of chunk unnamed-chunk-2](figure/unnamed-chunk-2-1.png) 
 
 ```r
-# Print the median and the mean of steps taken per day
-sprintf("Median of steps per day = %0.2f", median(byDate$x))
+medianByDate <- median(byDay$Steps)
+meanByDate   <- mean(byDay$Steps)
+sprintf("Median = %0.2f. Mean = %0.2f", medianByDate, meanByDate)
 ```
 
 ```
-## [1] "Median of steps per day = 10765.00"
+## [1] "Median = 10765.00. Mean = 10766.19"
 ```
-
-```r
-sprintf("Mean of steps per day = %0.2f", mean(byDate$x))
-```
-
-```
-## [1] "Mean of steps per day = 10766.19"
-```
+Median of the total number of steps taken by day: ***10765.00***   
+Mean of the total number of steps taken by day: ***10766.19*** 
 
 ## What is the average daily activity pattern?
+Here I compute the average of steps per interval across all dates and plot
 
 ```r
-# Calculate average of steps per interval across all dates and plot
-byInterval <-aggregate(dvalid$steps, by=list(interval=dvalid$interval), FUN=mean)
+byInterval <- aggregate(dvalid$steps, by=list(interval=dvalid$interval), FUN=mean)
 plot(byInterval$interval, byInterval$x, type="l", main="Mean number of steps per interval (across all days)", xlab="Interval", ylab="Mean number of steps")
+# Order the intervals in decreasing order and take the first one
+a         <- order(byInterval$x, decreasing=TRUE)
+topInt    <- byInterval[a[1],"interval"]
+abline(v=topInt, col="blue", lwd=2)
 ```
 
 ![plot of chunk unnamed-chunk-3](figure/unnamed-chunk-3-1.png) 
 
 ```r
-# Order the intervals in decreasing order and take the first one
-a <-order(byInterval$x, decreasing=TRUE)
-topInt   <- byInterval[a[1],"interval"]
+topInt    <- sprintf("%04s",as.character(topInt))
+topIntStr <- paste(substring(topInt,1,2),":",substring(topInt,3,4), sep="")
 avgSteps <- byInterval[a[1], "x"]
-sprintf("5-minute interval with maximum numer of steps: %d (with average of %f steps)", topInt, avgSteps)
+sprintf("5-minute interval maximum number of steps at %s (average of %f steps)", topIntStr, avgSteps)
 ```
 
 ```
-## [1] "5-minute interval with maximum numer of steps: 835 (with average of 206.169811 steps)"
+## [1] "5-minute interval maximum number of steps at  8:35 (average of 206.169811 steps)"
 ```
-
+Hence, the 5-minute interval that on average across all the days in the dataset, contains the maximum number of steps is at  8:35 (with average of 206.17 steps).
 
 ## Imputing missing values
 
 The strategy for imputing missing values will be to assume the same number of steps that the mean of number of steps for the same 5-minute interval calculated considering the valid data.
 
+After computing the average steps per interval (considering valid cases only) the rows with NAs are identified and a new data set with only the non-complete cases is created filling the NA values with the estimate. 
+
+A new dataset with both the previously complete data and the new imputed values is created by binding both datasets.
+
+Finally the histogram is plotted and the values of median and mean shown.
+
 
 ```r
-# First show the number of rows with NAs
 sprintf("Total numer of rows with NAs: %d", sum(is.na(df)))
 ```
 
@@ -81,40 +90,32 @@ sprintf("Total numer of rows with NAs: %d", sum(is.na(df)))
 ```
 
 ```r
-# Calculate the average steps per interval (considering valid cases cases)
 avgByInt    <- aggregate(dvalid$steps, by=list(interval=dvalid$interval), FUN=mean)
-# Identify rows with NAs
 rowsWithNA  <- !complete.cases(df)
-# Creation of a new dataframe with only the non-complete cases
 dfWithNA    <- df[rowsWithNA,]
-# Fill the NA values with an estimate 
 dfWithNA$steps <-sapply(dfWithNA$interval, function(x) {avgByInt[avgByInt$interval==x,"x"]})
-# Creation of a new dataset with missing data filled in
-completeDF <- rbind(dvalid, dfWithNA)
+completeDF  <- rbind(dvalid, dfWithNA)
 row.names(completeDF) <- NULL
-completeByDate <- aggregate(completeDF$steps, by=list(date=completeDF$date), FUN=sum)
-bins    <-seq(1, max(completeByDate$x), length=15)
-hist(completeByDate$x, breaks= bins, xlab="Number of Steps", main="Histogram of steps taken per day")
+allByDay    <- group_by(completeDF, date)
+allByDay    <- summarise(allByDay, Steps=sum(steps))
+ggplot(allByDay, aes(Steps))+ geom_histogram(binwidth=1500, fill="white", colour="black") +
+    ggtitle("Histogram of steps taken per day")    
 ```
 
 ![plot of chunk unnamed-chunk-4](figure/unnamed-chunk-4-1.png) 
 
 ```r
-# Print the median and the mean of steps taken per day
-sprintf("Median of steps per day = %0.2f", median(completeByDate$x))
+allMedian <- median(allByDay$Steps)
+allMean   <- mean(allByDay$Steps)
+sprintf("Median = %0.2f. Mean = %0.2f", allMedian, allMean)
 ```
 
 ```
-## [1] "Median of steps per day = 10766.19"
+## [1] "Median = 10766.19. Mean = 10766.19"
 ```
+Median of the total number of steps taken by day: ***10766.19***   
+Mean of the total number of steps taken by day: ***10766.19*** 
 
-```r
-sprintf("Mean of steps per day = %0.2f", mean(completeByDate$x))
-```
-
-```
-## [1] "Mean of steps per day = 10766.19"
-```
 ### Impact of inputing missing data
 Observe that only the median differs (and only by a little value) when we input missing data with estimate values.
 This is just because the estimate has been chosen as the mean for the intervals (hence the mean is exactly the same in both cases).
@@ -125,7 +126,8 @@ In global we can say that the impact of inputing missing data has been minimal.
 ## Are there differences in activity patterns between weekdays and weekends?
 
 ```r
-Sys.setlocale("LC_TIME", "English")
+library(lattice)
+Sys.setlocale("LC_TIME", "English")  # Just to use English days of the week
 ```
 
 ```
@@ -133,13 +135,14 @@ Sys.setlocale("LC_TIME", "English")
 ```
 
 ```r
-wd <- ifelse(weekdays(completeDF$date) %in% c('Saturday','Sunday'), "weekend", "weekday" )
-completeDF$weekwhat <- as.factor(wd)
-library(lattice)
-byInterval <-aggregate(completeDF$steps, by=list(interval=completeDF$interval, weekwhat=completeDF$weekwhat), FUN=mean)
-
-xyplot(byInterval$x~byInterval$interval |levels(byInterval$weekwhat), type="l", layout=c(1,2), xlab="Interval", ylab="Number of Steps")
+dfww <- dvalid
+wd   <- ifelse(weekdays(dfww$date) %in% c('Saturday','Sunday'), "weekend", "weekday" )
+dfww$weekwhat <- as.factor(wd)
+byInterval <-aggregate(dfww$steps, by=list(interval=dfww$interval, weekwhat=dfww$weekwhat), FUN=mean)
+xyplot(byInterval$x ~ byInterval$interval |byInterval$weekwhat, type="l", layout=c(1,2), xlab="Interval", ylab="Number of Steps")
 ```
 
 ![plot of chunk unnamed-chunk-5](figure/unnamed-chunk-5-1.png) 
 
+We can appreciate a different pattern between weekdays and weekends.  
+Activity starts earlier and abruptly during weekdays (at about 05:30) compared to weekends when activity begins later and more smoothly. Weekdays have a bigger peak at about 8:30 to 9:00 compared to weekends, but during the rest of the day weekdays are more "sedentarian" compared to weekends that have more intensity and a lot of peaks. .

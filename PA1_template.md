@@ -50,17 +50,14 @@ Computing the average of steps per interval and sorting them in decreasing order
 byInterval <- aggregate(dvalid$steps, by=list(interval=dvalid$interval), FUN=mean)
 a         <- order(byInterval$x, decreasing=TRUE)
 topInt    <- byInterval[a[1],"interval"]
-abline(v=topInt, col="blue", lwd=2)
-```
-
-```
-## Error in int_abline(a = a, b = b, h = h, v = v, untf = untf, ...): plot.new has not been called yet
-```
-
-```r
 ggplot(data=byInterval, aes(x=interval, y=x), ) + geom_line(colour="blue") + 
     ylab("Mean number of steps") + ggtitle("Mean number of steps per interval (across all days)") +
     geom_vline(xintercept = topInt, col="red")
+```
+
+![plot of chunk unnamed-chunk-3](figure/unnamed-chunk-3-1.png) 
+
+```r
 topInt    <- sprintf("%04s",as.character(topInt))
 topIntStr <- paste(substring(topInt,1,2),":",substring(topInt,3,4), sep="")
 avgSteps <- byInterval[a[1], "x"]
@@ -70,7 +67,7 @@ sprintf("5-minute interval maximum number of steps at %s (average of %f steps)",
 ```
 ## [1] "5-minute interval maximum number of steps at  8:35 (average of 206.169811 steps)"
 ```
-Hence, the 5-minute interval that on average across all the days in the dataset, contains the maximum number of steps is at ** 8:35** (with average of **206.17** steps).
+Hence, the 5-minute interval that on average across all the days in the dataset, contains the maximum number of steps is at  8:35 (with average of **206.17** steps).
 
 ## Imputing missing values
 
